@@ -30,13 +30,13 @@ echo 'blacklist dvb_usb_rtl28xxu' | sudo tee /etc/modprobe.d/blacklist-rtl.conf
 echo "==> rtlsdr_wsprd (standalone WSPR capture+decode daemon)"
 # Upstream repo was renamed Guenael/rtlsdr_wsprd -> rtlsdr-wsprd (hyphen).
 # Binary is still named rtlsdr_wsprd. The Makefile's ARMv6 (Pi Zero/1) profile
-# injects clang-only flags (--target=arm-linux-gnueabihf), so build with clang
-# (the Makefile's default CC) rather than gcc. Letting it pick CC also keeps its
-# own arch detection working for ARMv7/aarch64 (Zero 2 W).
+# injects clang-only flags (--target=arm-linux-gnueabihf), so it must build with
+# clang. Its `CC ?= clang` is a no-op because make pre-defines CC=cc (origin
+# 'default', not 'undefined'), so pass CC=clang explicitly here.
 if [ ! -d "$HOME/rtlsdr-wsprd" ]; then
     git clone https://github.com/Guenael/rtlsdr-wsprd "$HOME/rtlsdr-wsprd"
 fi
-make -C "$HOME/rtlsdr-wsprd" -j"$(nproc)"
+make -C "$HOME/rtlsdr-wsprd" -j"$(nproc)" CC=clang
 sudo make -C "$HOME/rtlsdr-wsprd" install || \
     sudo cp "$HOME/rtlsdr-wsprd/rtlsdr_wsprd" /usr/local/bin/
 
