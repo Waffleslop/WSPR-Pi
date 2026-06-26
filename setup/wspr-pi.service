@@ -1,0 +1,20 @@
+# systemd unit to run wspr-pi as an appliance.
+# Install:
+#   sudo cp setup/wspr-pi.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now wspr-pi
+# Edit User/WorkingDirectory to match where you cloned the repo.
+[Unit]
+Description=wspr-pi offline WSPR decoder
+After=network.target time-sync.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/wspr-pi
+ExecStart=/usr/bin/python3 -m wspr_pi.app
+Environment=PYTHONPATH=/home/pi/wspr-pi/src
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

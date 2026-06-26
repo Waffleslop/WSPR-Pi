@@ -1,0 +1,33 @@
+# Copy to config/config.toml and edit over SSH. config.toml is gitignored.
+
+[station]
+# Your Maidenhead grid locator (4 or 6 chars). This replaces GPS for a fixed
+# station and is used to compute distance/bearing to each decoded station.
+grid = "FN20"
+callsign = "N0CALL"
+
+[radio]
+band = "20m"
+# WSPR dial (USB) frequency in Hz for the chosen band:
+#   80m = 3568600   40m = 7038600    30m = 10138700
+#   20m = 14095600  17m = 18104600   15m = 21094600   10m = 28124600
+dial_freq_hz = 14095600
+ppm = 0            # RTL-SDR frequency correction (measure once, then set)
+gain = "auto"      # or a dB value like "40.2"
+rtlsdr_wsprd_path = "rtlsdr_wsprd"
+
+[display]
+page_size = 5      # decodes shown per screen
+
+[buttons]
+# BCM pin numbers for buttons you wire to GND (the 2.13" HAT may have no keys).
+pin_next = 5
+pin_prev = 6
+pin_mode = 13
+
+[upload]
+enabled = false    # offline-first; flip on once WSPRnet upload is wired up
+call = "N0CALL"
+
+# db_path is relative to the working directory.
+db_path = "wspr.sqlite"

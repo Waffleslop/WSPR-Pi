@@ -1,0 +1,8 @@
+# App dependencies. On the Pi, the Waveshare e-paper library is installed
+# separately (see setup/install.sh) and lives outside pip.
+Pillow>=10.0
+gpiozero>=2.0
+tomli>=2.0 ; python_version < "3.11"
+
+# Dev/test only:
+pytest>=8.0
