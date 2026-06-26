@@ -28,12 +28,16 @@ sudo ldconfig
 echo 'blacklist dvb_usb_rtl28xxu' | sudo tee /etc/modprobe.d/blacklist-rtl.conf
 
 echo "==> rtlsdr_wsprd (standalone WSPR capture+decode daemon)"
-if [ ! -d "$HOME/rtlsdr_wsprd" ]; then
-    git clone https://github.com/Guenael/rtlsdr_wsprd "$HOME/rtlsdr_wsprd"
+# Upstream repo was renamed Guenael/rtlsdr_wsprd -> rtlsdr-wsprd (hyphen).
+# Binary is still named rtlsdr_wsprd. Its Makefile defaults to clang
+# (CC ?= clang); force gcc, which build-essential already provides and which
+# upstream notes is faster for this app, so we don't need a clang dependency.
+if [ ! -d "$HOME/rtlsdr-wsprd" ]; then
+    git clone https://github.com/Guenael/rtlsdr-wsprd "$HOME/rtlsdr-wsprd"
 fi
-make -C "$HOME/rtlsdr_wsprd" -j"$(nproc)"
-sudo make -C "$HOME/rtlsdr_wsprd" install || \
-    sudo cp "$HOME/rtlsdr_wsprd/rtlsdr_wsprd" /usr/local/bin/
+make -C "$HOME/rtlsdr-wsprd" -j"$(nproc)" CC=gcc
+sudo make -C "$HOME/rtlsdr-wsprd" install || \
+    sudo cp "$HOME/rtlsdr-wsprd/rtlsdr_wsprd" /usr/local/bin/
 
 echo "==> Waveshare e-Paper Python library"
 sudo raspi-config nonint do_spi 0   # enable SPI
