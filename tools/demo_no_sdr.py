@@ -1,13 +1,14 @@
-"""Drive the full app with fake spots so the e-paper, buttons, store, and
-distance/bearing math can be exercised on hardware *without* the RTL-SDR.
+"""Drive the app with fake spots so the e-paper, store, and distance/bearing
+math can be exercised on hardware *without* the RTL-SDR.
 
 Run on the Pi:
     PYTHONPATH=src python3 tools/demo_no_sdr.py
 
 It loads config (so home grid = yours), inserts a spread of synthetic decodes
-into a throwaway in-memory-ish DB, renders them to the real e-paper, and lets
-the wired buttons page through history. The SDR decode loop is stubbed out, so
-no rtlsdr_wsprd process is spawned. Ctrl+C to exit.
+into a throwaway DB, renders them to the real e-paper, and pages through history
+from the keyboard over SSH (n/p) -- using the same _next/_prev handlers the
+physical buttons would call. Useful when the GPIO header is buried under a HAT +
+PiSugar stack. No rtlsdr_wsprd process is spawned. Type q (or Ctrl+C) to exit.
 """
 from __future__ import annotations
 
@@ -66,17 +67,30 @@ def main() -> None:
             d.altitude_m, d.speed_kmh = balloon
         app.store.add(app._enrich(d))  # _enrich fills distance/bearing from home grid
 
+    pages = -(-len(SAMPLE) // cfg.page_size)
     print(f"[demo] inserted {len(SAMPLE)} fake spots; home grid = {cfg.home_grid}")
-    print(f"[demo] page_size = {cfg.page_size} -> "
-          f"{-(-len(SAMPLE) // cfg.page_size)} pages")
+    print(f"[demo] page_size = {cfg.page_size} -> {pages} pages "
+          f"(last page has {len(SAMPLE) - (pages - 1) * cfg.page_size} rows)")
     print("[demo] rendering to e-paper (or console if the panel is absent).")
-    print("[demo] press NEXT/PREV buttons to page; Ctrl+C to quit.")
 
-    # Stub the SDR loop so run() doesn't spawn rtlsdr_wsprd.
-    app._decode_loop = lambda: None
+    app._refresh()  # draw page 0
+    print("\n[demo] paging controls (Enter after each):")
+    print("         n = next page   p = prev page   q = quit\n")
     try:
-        app.run()
-    except KeyboardInterrupt:
+        while True:
+            cmd = input(f"[demo] page {app.page}/{pages - 1} > ").strip().lower()
+            if cmd == "n":
+                app._next()
+            elif cmd == "p":
+                app._prev()
+            elif cmd == "q":
+                break
+            else:
+                continue
+            app._refresh()
+    except (KeyboardInterrupt, EOFError):
+        pass
+    finally:
         print("\n[demo] bye")
         app.display.sleep()
 
