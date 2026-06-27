@@ -1,13 +1,17 @@
 """Drive `rtlsdr_wsprd` and parse its spots into Decode records.
 
-`rtlsdr_wsprd` (https://github.com/Guenael/rtlsdr_wsprd) does continuous
+`rtlsdr_wsprd` (https://github.com/Guenael/rtlsdr-wsprd) does continuous
 RTL-SDR capture, 2-minute window alignment, and wsprd decoding for us. We just
 consume its stdout.
 
-VERIFY ON DEVICE: the exact CLI flags and the stdout spot-line format vary by
-version. Run `rtlsdr_wsprd -h` and capture a few real decode lines, then adjust
-`_SPOT_RE` and the argv in `run()` to match. The parser below targets the common
-wsprd-style line:  HHMM  SNR  DT  FreqMHz  Drift  MESSAGE
+Spot-line format verified on device (`rtlsdr_wsprd -t` self-test) against the
+build from Guenael/rtlsdr-wsprd. It prints a header then one line per spot:
+
+    Spot(0)  22.80   0.01  14.097150  0    K1JT   FN20 20
+    Spot(N)  SNR     DT    FreqMHz    Dr   Call   Loc  Pwr
+
+Note SNR is a float here (not the integer HHMM-prefixed wsprd format), and the
+line is prefixed with `Spot(N)` rather than a UTC timestamp.
 """
 from __future__ import annotations
 
@@ -20,7 +24,7 @@ from .config import Config
 from .models import Decode
 
 _SPOT_RE = re.compile(
-    r"^\s*(?P<utc>\d{4})\s+(?P<snr>-?\d+)\s+(?P<dt>-?\d+\.?\d*)\s+"
+    r"^\s*Spot\(\d+\)\s+(?P<snr>-?\d+\.?\d*)\s+(?P<dt>-?\d+\.?\d*)\s+"
     r"(?P<freq>\d+\.\d+)\s+(?P<drift>-?\d+)\s+(?P<msg>.+?)\s*$"
 )
 
@@ -52,7 +56,7 @@ def parse_spot(line: str, band: str) -> Optional[Decode]:
         callsign=callsign,
         grid=grid,
         power_dbm=power,
-        snr_int=int(m.group("snr")),
+        snr_int=int(round(float(m.group("snr")))),  # SNR is a float in this build
         dt=float(m.group("dt")),
         freq_hz=float(m.group("freq")) * 1_000_000.0,
         drift=int(m.group("drift")),
@@ -68,7 +72,11 @@ def build_argv(cfg: Config) -> list[str]:
         "-l", cfg.home_grid,
         "-p", str(cfg.ppm),
     ]
-    if cfg.gain and cfg.gain.lower() != "auto":
+    # This build uses -a for auto gain and -g <0-49> for a fixed value; emitting
+    # neither would silently leave it at the fixed default (29).
+    if cfg.gain and cfg.gain.lower() == "auto":
+        argv.append("-a")
+    elif cfg.gain:
         argv += ["-g", str(cfg.gain)]
     return argv
 
