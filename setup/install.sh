@@ -11,6 +11,7 @@ sudo apt-get install -y \
     libusb-1.0-0-dev \
     libfftw3-dev libcurl4-openssl-dev \
     python3 python3-pip python3-venv python3-pil \
+    fonts-dejavu-core \
     chrony i2c-tools
 
 echo "==> RTL-SDR Blog drivers (required for the V4 / R828D tuner)"

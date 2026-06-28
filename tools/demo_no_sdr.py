@@ -36,6 +36,17 @@ SAMPLE = [
     ("AC1ZZZ", "FN31", 27, -21, 1000, None),
 ]
 
+# A few seeded operator names (the rest stay blank, as they would before a
+# lookup resolves them) so the two-line layout shows the name field in action.
+NAMES = {
+    "K1ABC": "Joe Taylor",
+    "W3XYZ": "Maria Lopez",
+    "G0ABC": "Brian Cox",
+    "DL1XYZ": "Hans Richter",
+    "JA1ABC": "Yuki Tanaka",
+    "KD2QWE": "Sam Park",
+}
+
 
 def main() -> None:
     cfg_path = Path("config/config.toml")
@@ -66,6 +77,8 @@ def main() -> None:
             d.is_balloon = True
             d.altitude_m, d.speed_kmh = balloon
         app.store.add(app._enrich(d))  # _enrich fills distance/bearing from home grid
+        if call in NAMES:  # seed the name cache as a real lookup would
+            app.store.set_name(call, NAMES[call], base)
 
     pages = -(-len(SAMPLE) // cfg.page_size)
     print(f"[demo] inserted {len(SAMPLE)} fake spots; home grid = {cfg.home_grid}")

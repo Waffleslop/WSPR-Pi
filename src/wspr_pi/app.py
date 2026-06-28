@@ -66,9 +66,10 @@ class App:
             self._refresh()
 
     def _refresh(self):
+        total = self.store.count()
+        pages = max(1, (total + self.cfg.page_size - 1) // self.cfg.page_size)
         rows = self.store.page(self.page, self.cfg.page_size)
-        status = f"{self.store.count()} spots"
-        self.display.render(rows, self.page, self.mode, status)
+        self.display.render(rows, self.page, pages, self.mode, self.cfg.band, total)
 
 
 def main():

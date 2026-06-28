@@ -42,3 +42,16 @@ def test_invalid_grid_raises():
         except ValueError:
             continue
         raise AssertionError(f"expected ValueError for {bad!r}")
+
+
+def test_km_to_miles():
+    assert approx(mh.km_to_miles(100.0), 62.137, 0.01)
+    assert mh.km_to_miles(0.0) == 0.0
+
+
+def test_bearing_to_cardinal():
+    cases = {0: "N", 45: "NE", 90: "E", 135: "SE", 180: "S",
+             225: "SW", 270: "W", 315: "NW", 360: "N", 359: "N", 10: "N",
+             24: "NNE"}
+    for deg, want in cases.items():
+        assert mh.bearing_to_cardinal(deg) == want, f"{deg} -> {want}"

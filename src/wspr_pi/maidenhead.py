@@ -12,6 +12,19 @@ _A = ord("A")
 _a = ord("a")
 
 EARTH_RADIUS_KM = 6371.0088  # mean radius
+MILES_PER_KM = 0.621371192
+
+_COMPASS_16 = ("N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
+               "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW")
+
+
+def km_to_miles(km: float) -> float:
+    return km * MILES_PER_KM
+
+
+def bearing_to_cardinal(deg: float) -> str:
+    """Map a bearing in degrees to a 16-point compass label (e.g. 'NE')."""
+    return _COMPASS_16[int((deg % 360) / 22.5 + 0.5) % 16]
 
 
 def grid_to_latlon(grid: str) -> Tuple[float, float]:

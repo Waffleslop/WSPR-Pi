@@ -32,3 +32,6 @@ class Decode:
     altitude_m: Optional[int] = None
     speed_kmh: Optional[int] = None
     is_balloon: bool = False
+
+    # operator name, filled opportunistically from a cached callsign lookup
+    op_name: Optional[str] = None

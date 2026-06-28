@@ -18,7 +18,7 @@ class Config:
     dial_freq_hz: int
     callsign: str = "N0CALL"
     db_path: str = "wspr.sqlite"
-    page_size: int = 5
+    page_size: int = 3
     ppm: int = 0
     gain: str = "auto"
     rtlsdr_wsprd_path: str = "rtlsdr_wsprd"
@@ -28,6 +28,11 @@ class Config:
     pin_mode: int = 13
     upload_enabled: bool = False
     wsprnet_call: str = ""
+    # opportunistic operator-name lookup (cached; shown offline once resolved)
+    lookup_enabled: bool = False
+    lookup_service: str = "hamqth"
+    lookup_user: str = ""
+    lookup_pass: str = ""
 
 
 def load(path: Union[str, Path]) -> Config:
@@ -37,6 +42,7 @@ def load(path: Union[str, Path]) -> Config:
     display = data.get("display", {})
     buttons = data.get("buttons", {})
     upload = data.get("upload", {})
+    lookup = data.get("lookup", {})
     return Config(
         home_grid=station["grid"],
         callsign=station.get("callsign", "N0CALL"),
@@ -46,10 +52,14 @@ def load(path: Union[str, Path]) -> Config:
         gain=str(radio.get("gain", "auto")),
         rtlsdr_wsprd_path=radio.get("rtlsdr_wsprd_path", "rtlsdr_wsprd"),
         db_path=data.get("db_path", "wspr.sqlite"),
-        page_size=int(display.get("page_size", 5)),
+        page_size=int(display.get("page_size", 3)),
         pin_next=int(buttons.get("pin_next", 5)),
         pin_prev=int(buttons.get("pin_prev", 6)),
         pin_mode=int(buttons.get("pin_mode", 13)),
         upload_enabled=bool(upload.get("enabled", False)),
         wsprnet_call=upload.get("call", station.get("callsign", "")),
+        lookup_enabled=bool(lookup.get("enabled", False)),
+        lookup_service=str(lookup.get("service", "hamqth")),
+        lookup_user=str(lookup.get("username", "")),
+        lookup_pass=str(lookup.get("password", "")),
     )

@@ -17,7 +17,7 @@ gain = "auto"      # or a dB value like "40.2"
 rtlsdr_wsprd_path = "rtlsdr_wsprd"
 
 [display]
-page_size = 5      # decodes shown per screen
+page_size = 3      # decodes per screen (two-line layout fits ~3 on the 2.13")
 
 [buttons]
 # BCM pin numbers for buttons you wire to GND (the 2.13" HAT may have no keys).
@@ -28,6 +28,15 @@ pin_mode = 13
 [upload]
 enabled = false    # offline-first; flip on once WSPRnet upload is wired up
 call = "N0CALL"
+
+[lookup]
+# Opportunistic operator-name lookup. Names are cached in SQLite, so once a
+# callsign is resolved (while online) it shows even offline. HamQTH is free;
+# make an account at hamqth.com and put the credentials here.
+enabled = false
+service = "hamqth"
+username = ""
+password = ""
 
 # db_path is relative to the working directory.
 db_path = "wspr.sqlite"

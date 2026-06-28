@@ -25,6 +25,12 @@ CREATE TABLE IF NOT EXISTS decodes (
     is_balloon  INTEGER DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_decodes_ts ON decodes(ts DESC, id DESC);
+
+CREATE TABLE IF NOT EXISTS operators (
+    callsign TEXT PRIMARY KEY,
+    name     TEXT,
+    ts       INTEGER
+);
 """
 
 
@@ -57,10 +63,34 @@ class Store:
             "SELECT * FROM decodes ORDER BY ts DESC, id DESC LIMIT ? OFFSET ?",
             (size, page * size),
         ).fetchall()
-        return [self._row(r) for r in rows]
+        decodes = [self._row(r) for r in rows]
+        for d in decodes:  # attach cached operator names (None if unknown)
+            d.op_name = self.get_name(d.callsign)
+        return decodes
 
     def count(self) -> int:
         return self.conn.execute("SELECT COUNT(*) FROM decodes").fetchone()[0]
+
+    # --- operator-name cache (populated opportunistically by a lookup) ---
+    def get_name(self, callsign: str):
+        row = self.conn.execute(
+            "SELECT name FROM operators WHERE callsign = ?", (callsign,)
+        ).fetchone()
+        return row["name"] if row else None
+
+    def has_name(self, callsign: str) -> bool:
+        """True if we've already resolved (or tried and stored) this callsign."""
+        return self.conn.execute(
+            "SELECT 1 FROM operators WHERE callsign = ?", (callsign,)
+        ).fetchone() is not None
+
+    def set_name(self, callsign: str, name, ts: int) -> None:
+        self.conn.execute(
+            """INSERT INTO operators (callsign, name, ts) VALUES (?,?,?)
+               ON CONFLICT(callsign) DO UPDATE SET name=excluded.name, ts=excluded.ts""",
+            (callsign, name, ts),
+        )
+        self.conn.commit()
 
     def _prune(self) -> None:
         self.conn.execute(
